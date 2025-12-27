@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { getTheme, setTheme } from "./utils/theme";
 import ThemeToggle from "./components/ThemeToggle";
+import { Route, Routes } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   useEffect(() => {
@@ -8,11 +11,10 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <h1 className="text-center text-3xl font-bold text-primary pt-10">
-        FinTrack
-      </h1>
-    </div>
+     <Routes>
+      <Route path="/" element={<Dashboard/>} />
+      <Route path="/login" element={<Login/>} />
+     </Routes>
   );
 }
 
