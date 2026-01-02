@@ -1,6 +1,42 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import api from "../api/axios";
+import { getToken } from "../utils/auth";
 
 const Dashboard = () => {
+  const [summary, setSummary] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    balance: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  const fetchSummary = async () => {
+    try {
+      console.log("TOKEN SENT:", getToken());
+
+      const res = await api.get("/transactions/summary", {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+
+      console.log("SUMMARY API RAW RESPONSE:", res);
+      console.log("SUMMARY API DATA:", res.data);
+
+      setSummary(res.data); // we will adjust after seeing logs
+    } catch (error) {
+      console.error("SUMMARY API ERROR:", error.response || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSummary();
+}, []);
+
   return (
     <>
       <Navbar />
@@ -19,7 +55,7 @@ const Dashboard = () => {
               Total Income
             </p>
             <p className="text-2xl font-bold text-income mt-2">
-              ₹0
+              {loading ? "—" : `₹${summary.totalIncome}`}
             </p>
           </div>
 
@@ -29,7 +65,7 @@ const Dashboard = () => {
               Total Expense
             </p>
             <p className="text-2xl font-bold text-expense mt-2">
-              ₹0
+              {loading ? "—" : `₹${summary.totalExpense}`}
             </p>
           </div>
 
@@ -39,13 +75,13 @@ const Dashboard = () => {
               Balance
             </p>
             <p className="text-2xl font-bold text-primary mt-2">
-              ₹0
+              {loading ? "—" : `₹${summary.balance}`}
             </p>
           </div>
 
         </div>
 
-        {/* Budget Section */}
+        {/* Budget Placeholder */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
           <h2 className="text-lg font-semibold mb-2">
             Monthly Budget
@@ -59,7 +95,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Transactions */}
+        {/* Recent Transactions Placeholder */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
           <h2 className="text-lg font-semibold mb-4">
             Recent Transactions
