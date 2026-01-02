@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import Transactions from "./pages/Transaction";
 
 function App() {
   useEffect(() => {
@@ -19,6 +20,9 @@ function App() {
       <Route path="/" element={<ProtectedRoute>
                                   <Dashboard />
                                 </ProtectedRoute>} />
+      <Route path="/transactions" element={<ProtectedRoute>
+                                  <Transactions />
+                                </ProtectedRoute>} />                          
     </Routes>
   );
 }
