@@ -3,10 +3,12 @@ import Navbar from "../components/Navbar";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import api from "../api/axios";
 import { getToken } from "../utils/auth";
+import AddTransactionModal from "../components/AddTransactionalModal";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal,setShowModal] = useState(false)
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -38,11 +40,18 @@ const Transactions = () => {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Transactions</h1>
 
-          <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+          <button 
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
             <Plus size={16} />
             Add Transaction
           </button>
         </div>
+
+        {showModal && (
+        <AddTransactionModal onClose={() => setShowModal(false)} />
+        )}
+
 
         {/* Table */}
         <div className="bg-white dark:bg-cardDark rounded-xl shadow overflow-x-auto">
