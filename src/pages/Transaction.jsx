@@ -1,7 +1,33 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import api from "../api/axios";
+import { getToken } from "../utils/auth";
 
 const Transactions = () => {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await api.get("/transactions", {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        });
+
+        setTransactions(res.data);
+      } catch (error) {
+        console.error("Failed to fetch transactions");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -32,29 +58,69 @@ const Transactions = () => {
             </thead>
 
             <tbody>
-              {/* Empty State */}
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-4 py-6 text-center text-slate-500 dark:text-slate-400"
-                >
-                  No transactions found.
-                </td>
-              </tr>
+              {/* Loading State */}
+              {loading && (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-4 py-6 text-center text-slate-500 dark:text-slate-400"
+                  >
+                    Loading transactions...
+                  </td>
+                </tr>
+              )}
 
-              {/* 
-              SAMPLE ROW (for later reference)
-              <tr className="border-t border-slate-200 dark:border-slate-700">
-                <td className="px-4 py-3">12 Sep 2025</td>
-                <td className="px-4 py-3 text-income">Income</td>
-                <td className="px-4 py-3">Salary</td>
-                <td className="px-4 py-3 font-medium">₹50,000</td>
-                <td className="px-4 py-3 flex justify-end gap-3">
-                  <Edit size={16} className="cursor-pointer text-slate-500" />
-                  <Trash2 size={16} className="cursor-pointer text-expense" />
-                </td>
-              </tr>
-              */}
+              {/* Empty State */}
+              {!loading && transactions.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-4 py-6 text-center text-slate-500 dark:text-slate-400"
+                  >
+                    No transactions found.
+                  </td>
+                </tr>
+              )}
+
+              {/* Transactions */}
+              {!loading &&
+                transactions.map((tx) => (
+                  <tr
+                    key={tx._id}
+                    className="border-t border-slate-200 dark:border-slate-700"
+                  >
+                    <td className="px-4 py-3">
+                      {new Date(tx.date).toLocaleDateString()}
+                    </td>
+
+                    <td
+                      className={`px-4 py-3 font-medium ${
+                        tx.type === "income"
+                          ? "text-income"
+                          : "text-expense"
+                      }`}
+                    >
+                      {tx.type}
+                    </td>
+
+                    <td className="px-4 py-3">{tx.category}</td>
+
+                    <td className="px-4 py-3 font-medium">
+                      ₹{tx.amount}
+                    </td>
+
+                    <td className="px-4 py-3 flex justify-end gap-3">
+                      <Edit
+                        size={16}
+                        className="cursor-pointer text-slate-500"
+                      />
+                      <Trash2
+                        size={16}
+                        className="cursor-pointer text-expense"
+                      />
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
