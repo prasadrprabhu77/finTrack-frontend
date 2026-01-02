@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { getToken } from "../utils/auth";
+import CategoryExpenseChart from "../components/CategoryExpenseChart";
 
 const Dashboard = () => {
   const [summary, setSummary] = useState({
@@ -10,21 +11,19 @@ const Dashboard = () => {
     balance: 0,
   });
 
+  const [categoryData,setCategoryData] = useState([])
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   const fetchSummary = async () => {
     try {
-      console.log("TOKEN SENT:", getToken());
 
       const res = await api.get("/transactions/summary", {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
       });
-
-      console.log("SUMMARY API RAW RESPONSE:", res);
-      console.log("SUMMARY API DATA:", res.data);
 
       setSummary(res.data); // we will adjust after seeing logs
     } catch (error) {
@@ -34,8 +33,26 @@ const Dashboard = () => {
     }
   };
 
+  const fetchCategoryData = async () => {
+  try {
+    const res = await api.get("/transactions/category", {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    setCategoryData(res.data);
+  } catch (error) {
+    console.error("Failed to fetch category expense data");
+  }
+};
+
+
   fetchSummary();
+  fetchCategoryData();
 }, []);
+
+
 
   return (
     <>
@@ -78,6 +95,14 @@ const Dashboard = () => {
               {loading ? "—" : `₹${summary.balance}`}
             </p>
           </div>
+          {/* Category Expense Chart */}
+<div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
+  <h2 className="text-lg font-semibold mb-4">
+    Category-wise Expenses
+  </h2>
+
+  <CategoryExpenseChart data={categoryData} />
+</div>
 
         </div>
 
