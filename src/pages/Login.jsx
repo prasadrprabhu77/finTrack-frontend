@@ -3,6 +3,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { setToken } from "../utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Login = () => {
         password,
       });
 
-      localStorage.setItem("token", res.data.token);
+      setToken(res.data.token)
       navigate("/");
     } catch (err) {
       setError(
