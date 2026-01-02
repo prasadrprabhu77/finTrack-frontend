@@ -1,10 +1,43 @@
 import { Wallet } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const Signup = () => {
+  const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      await api.post("/auth/signup", {
+        name,
+        email,
+        password,
+      });
+
+      // redirect to login after successful signup
+      navigate("/login");
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Signup failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
-      {/* Dark Mode Toggle – Top Right */}
+      {/* Dark Mode Toggle */}
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
@@ -26,8 +59,15 @@ const Signup = () => {
             Sign up to start tracking your finances
           </p>
 
+          {/* Error */}
+          {error && (
+            <p className="text-sm text-expense text-center mb-4">
+              {error}
+            </p>
+          )}
+
           {/* Form */}
-          <form className="space-y-4">
+          <div className="space-y-4">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -35,6 +75,8 @@ const Signup = () => {
               </label>
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="w-full px-3 py-2 border rounded-lg outline-none
                 border-slate-300 dark:border-slate-600
@@ -50,6 +92,8 @@ const Signup = () => {
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full px-3 py-2 border rounded-lg outline-none
                 border-slate-300 dark:border-slate-600
@@ -65,6 +109,8 @@ const Signup = () => {
               </label>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-3 py-2 border rounded-lg outline-none
                 border-slate-300 dark:border-slate-600
@@ -75,17 +121,22 @@ const Signup = () => {
 
             {/* Button */}
             <button
-              type="button"
-              className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:opacity-90 transition"
+              onClick={handleSignup}
+              disabled={loading}
+              className="w-full bg-primary text-white py-2 rounded-lg font-medium
+              hover:opacity-90 transition disabled:opacity-60"
             >
-              Create Account
+              {loading ? "Creating account..." : "Create Account"}
             </button>
-          </form>
+          </div>
 
           {/* Footer */}
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
             Already have an account?{" "}
-            <span className="text-primary font-medium cursor-pointer">
+            <span
+              onClick={() => navigate("/login")}
+              className="text-primary font-medium cursor-pointer"
+            >
               Login
             </span>
           </p>
