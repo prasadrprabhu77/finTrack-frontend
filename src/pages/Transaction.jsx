@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import api from "../api/axios";
 import { getToken } from "../utils/auth";
-import AddTransactionModal from "../components/AddTransactionalModal";
+import AddTransactionModal from "../components/AddTransactionModal";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -11,7 +11,10 @@ const Transactions = () => {
   const [showModal,setShowModal] = useState(false)
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
       try {
         const res = await api.get("/transactions", {
           headers: {
@@ -26,9 +29,6 @@ const Transactions = () => {
         setLoading(false);
       }
     };
-
-    fetchTransactions();
-  }, []);
 
   return (
     <>
@@ -49,7 +49,7 @@ const Transactions = () => {
         </div>
 
         {showModal && (
-        <AddTransactionModal onClose={() => setShowModal(false)} />
+        <AddTransactionModal onClose={() => setShowModal(false)} onSuccess={fetchTransactions} />
         )}
 
 

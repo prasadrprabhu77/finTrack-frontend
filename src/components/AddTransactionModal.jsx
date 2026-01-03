@@ -1,6 +1,47 @@
+import { useState } from "react";
 import { X } from "lucide-react";
+import api from "../api/axios";
+import { getToken } from "../utils/auth";
 
-const AddTransactionModal = ({ onClose }) => {
+const AddTransactionModal = ({ onClose, onSuccess }) => {
+  const [type, setType] = useState("expense");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [note, setNote] = useState("");
+  const [date, setDate] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await api.post(
+        "/transactions",
+        { 
+          type,
+          amount: Number(amount),
+          category,
+          note,
+    ...(date && { date }),
+         },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
+      onSuccess(); // refresh list
+      onClose();   // close modal
+    } catch (error) {
+      console.error(
+    "ADD TRANSACTION ERROR:",
+    error.response?.data || error.message
+  );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-cardDark w-full max-w-md rounded-xl p-6 shadow-lg">
@@ -21,8 +62,12 @@ const AddTransactionModal = ({ onClose }) => {
             <label className="block text-sm font-medium mb-1">
               Type
             </label>
-            <select className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
-              border-slate-300 dark:border-slate-600">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
+              border-slate-300 dark:border-slate-600"
+            >
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
@@ -35,6 +80,8 @@ const AddTransactionModal = ({ onClose }) => {
             </label>
             <input
               type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
               className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
               border-slate-300 dark:border-slate-600"
@@ -48,6 +95,8 @@ const AddTransactionModal = ({ onClose }) => {
             </label>
             <input
               type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               placeholder="e.g. Food, Rent"
               className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
               border-slate-300 dark:border-slate-600"
@@ -61,6 +110,8 @@ const AddTransactionModal = ({ onClose }) => {
             </label>
             <input
               type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               placeholder="Optional note"
               className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
               border-slate-300 dark:border-slate-600"
@@ -74,6 +125,8 @@ const AddTransactionModal = ({ onClose }) => {
             </label>
             <input
               type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
               border-slate-300 dark:border-slate-600"
             />
@@ -89,9 +142,11 @@ const AddTransactionModal = ({ onClose }) => {
             Cancel
           </button>
           <button
-            className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:opacity-90"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:opacity-90 disabled:opacity-60"
           >
-            Save
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
