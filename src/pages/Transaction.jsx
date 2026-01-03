@@ -9,6 +9,8 @@ const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal,setShowModal] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
 
   useEffect(() => {
     fetchTransactions();
@@ -49,7 +51,14 @@ const Transactions = () => {
         </div>
 
         {showModal && (
-        <AddTransactionModal onClose={() => setShowModal(false)} onSuccess={fetchTransactions} />
+          <AddTransactionModal
+            onClose={() => {
+              setShowModal(false);
+              setEditingTransaction(null);
+            }}
+            onSuccess={fetchTransactions}
+            transaction={editingTransaction}
+          />
         )}
 
 
@@ -122,6 +131,10 @@ const Transactions = () => {
                       <Edit
                         size={16}
                         className="cursor-pointer text-slate-500"
+                        onClick={() => {
+                          setEditingTransaction(tx);
+                          setShowModal(true);
+                        }}
                       />
                       <Trash2
                         size={16}
