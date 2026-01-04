@@ -32,6 +32,29 @@ const Transactions = () => {
       }
     };
 
+    const handleDelete = async (id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this transaction?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await api.delete(`/transactions/${id}`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    fetchTransactions(); // refresh list
+  } catch (error) {
+    console.error(
+      "DELETE TRANSACTION ERROR:",
+      error.response?.data || error.message
+    );
+  }
+};
+
   return (
     <>
       <Navbar />
@@ -139,6 +162,7 @@ const Transactions = () => {
                       <Trash2
                         size={16}
                         className="cursor-pointer text-expense"
+                        onClick={() => handleDelete(tx._id)}
                       />
                     </td>
                   </tr>
