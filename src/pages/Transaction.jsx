@@ -10,6 +10,10 @@ const Transactions = () => {
   const [loading, setLoading] = useState(true);
   const [showModal,setShowModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
 
   useEffect(() => {
@@ -17,20 +21,27 @@ const Transactions = () => {
   }, []);
 
   const fetchTransactions = async () => {
-      try {
-        const res = await api.get("/transactions", {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        });
+  setLoading(true);
+  try {
+    const res = await api.get("/transactions", {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+      params: {
+        type: typeFilter || undefined,
+        category: categoryFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      },
+    });
 
-        setTransactions(res.data);
-      } catch (error) {
-        console.error("Failed to fetch transactions");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setTransactions(res.data);
+  } catch (error) {
+    console.error("Failed to fetch transactions");
+  } finally {
+    setLoading(false);
+  }
+};
 
     const handleDelete = async (id) => {
   const confirmDelete = window.confirm(
@@ -72,6 +83,76 @@ const Transactions = () => {
             Add Transaction
           </button>
         </div>
+
+                {/* Filters */}
+        <div className="bg-white dark:bg-cardDark rounded-xl p-4 mb-6 shadow">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+            {/* Type */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
+              border-slate-300 dark:border-slate-600"
+            >
+              <option value="">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+
+            {/* Category */}
+            <input
+              type="text"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              placeholder="Category"
+              className="px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
+              border-slate-300 dark:border-slate-600"
+            />
+
+            {/* Start Date */}
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
+              border-slate-300 dark:border-slate-600"
+            />
+
+            {/* End Date */}
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border rounded-lg bg-white dark:bg-slate-800
+              border-slate-300 dark:border-slate-600"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={fetchTransactions}
+              className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
+            >
+              Apply Filters
+            </button>
+
+            <button
+              onClick={() => {
+                setTypeFilter("");
+                setCategoryFilter("");
+                setStartDate("");
+                setEndDate("");
+                fetchTransactions();
+              }}
+              className="px-4 py-2 border rounded-lg text-sm"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
 
         {showModal && (
           <AddTransactionModal
