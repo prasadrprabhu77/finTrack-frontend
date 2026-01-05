@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [budget, setBudget] = useState(null);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+
 
   const fetchBudget = async () => {
     try {
@@ -33,6 +35,22 @@ const Dashboard = () => {
       console.error("Failed to fetch budget");
     }
   };
+
+  const fetchRecentTransactions = async () => {
+    try {
+      const res = await api.get("/transactions", {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+
+      // take latest 5
+      setRecentTransactions(res.data.slice(0, 5));
+    } catch (error) {
+      console.error("Failed to fetch recent transactions");
+    }
+  };
+
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -72,9 +90,10 @@ const Dashboard = () => {
     fetchSummary();
     fetchCategoryData();
     fetchBudget();
+    fetchRecentTransactions();
   }, []);
 
-  
+
 
 
   const spent = summary.totalExpense;
@@ -163,10 +182,10 @@ const Dashboard = () => {
               <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
                 <div
                   className={`h-3 rounded ${percentage >= 100
-                      ? "bg-expense"
-                      : percentage > 80
-                        ? "bg-warning"
-                        : "bg-primary"
+                    ? "bg-expense"
+                    : percentage > 80
+                      ? "bg-warning"
+                      : "bg-primary"
                     }`}
                   style={{ width: `${percentage}%` }}
                 />
@@ -183,18 +202,50 @@ const Dashboard = () => {
           />
         )}
 
-
-
-
         {/* Recent Transactions Placeholder */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
           <h2 className="text-lg font-semibold mb-4">
             Recent Transactions
           </h2>
 
-          <p className="text-slate-500 dark:text-slate-400">
-            No transactions yet.
-          </p>
+          {/* Recent Transactions */}
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+            <h2 className="text-lg font-semibold mb-4">
+              Recent Transactions
+            </h2>
+
+            {recentTransactions.length === 0 ? (
+              <div className="text-slate-500 dark:text-slate-400">
+                No transactions yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentTransactions.map((tx) => (
+                  <div
+                    key={tx._id}
+                    className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2"
+                  >
+                    <div>
+                      <p className="font-medium">{tx.category}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {new Date(tx.date).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`font-semibold ${tx.type === "income"
+                          ? "text-income"
+                          : "text-expense"
+                        }`}
+                    >
+                      {tx.type === "income" ? "+" : "-"}₹{tx.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
       </div>
