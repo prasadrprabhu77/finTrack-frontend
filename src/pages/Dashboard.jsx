@@ -116,139 +116,139 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
           {/* Income */}
-          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow hover:shadow-md transition">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Total Income
             </p>
             <p className="text-2xl font-bold text-income mt-2">
-              {loading ? "—" : `₹${summary.totalIncome}`}
+              ₹{summary.totalIncome}
             </p>
           </div>
 
           {/* Expense */}
-          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow hover:shadow-md transition">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Total Expense
             </p>
             <p className="text-2xl font-bold text-expense mt-2">
-              {loading ? "—" : `₹${summary.totalExpense}`}
+              ₹{summary.totalExpense}
             </p>
           </div>
 
           {/* Balance */}
-          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow hover:shadow-md transition">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Balance
             </p>
             <p className="text-2xl font-bold text-primary mt-2">
-              {loading ? "—" : `₹${summary.balance}`}
+              ₹{summary.balance}
             </p>
           </div>
-          {/* Category Expense Chart */}
-          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
+        </div>
+
+        {/* Budget + Category Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+          {/* Budget */}
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-semibold">Monthly Budget</h2>
+              <button
+                onClick={() => setShowBudgetModal(true)}
+                className="text-primary text-sm"
+              >
+                {budget ? "Edit" : "Set"}
+              </button>
+            </div>
+
+            {!budget ? (
+              <p className="text-slate-500 dark:text-slate-400">
+                No budget set for this month.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm mb-1">
+                  ₹{summary.totalExpense} spent of ₹{budget.amount}
+                </p>
+                <p className="text-xs text-slate-500 mb-3">
+                  Remaining ₹{Math.max(budget.amount - summary.totalExpense, 0)}
+                </p>
+
+                <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
+                  <div
+                    className={`h-3 rounded ${percentage >= 100
+                      ? "bg-expense"
+                      : percentage > 80
+                        ? "bg-warning"
+                        : "bg-primary"
+                      }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </>
+            )}
+
+            {showBudgetModal && (
+              <AddBudgetModal
+                onClose={() => setShowBudgetModal(false)}
+                onSuccess={fetchBudget}
+                currentBudget={budget}
+              />
+            )}
+          </div>
+
+          {/* Category Chart */}
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
             <h2 className="text-lg font-semibold mb-4">
               Category-wise Expenses
             </h2>
 
-            <CategoryExpenseChart data={categoryData} />
+            <div className="h-64">
+              <CategoryExpenseChart data={categoryData} />
+            </div>
           </div>
-
         </div>
 
-        {/* Budget Progress */}
-        <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">Monthly Budget</h2>
-
-            <button
-              onClick={() => setShowBudgetModal(true)}
-              className="text-primary text-sm flex items-center gap-1"
-            >
-              <Plus size={14} />
-              {budget ? "Edit" : "Set"}
-            </button>
-          </div>
-
-          {!budget ? (
-            <div className="text-slate-500 dark:text-slate-400">
-              No budget set for this month.
-            </div>
-          ) : (
-            <div>
-              <div className="text-sm mb-2">
-                ₹{summary.totalExpense} spent out of ₹{budget.amount}
-              </div>
-
-              <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
-                <div
-                  className={`h-3 rounded ${percentage >= 100
-                    ? "bg-expense"
-                    : percentage > 80
-                      ? "bg-warning"
-                      : "bg-primary"
-                    }`}
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {showBudgetModal && (
-          <AddBudgetModal
-            onClose={() => setShowBudgetModal(false)}
-            onSuccess={fetchBudget}
-            currentBudget={budget}
-          />
-        )}
-
-        {/* Recent Transactions Placeholder */}
+        {/* Recent Transactions */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
           <h2 className="text-lg font-semibold mb-4">
             Recent Transactions
           </h2>
 
-          {/* Recent Transactions */}
-          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
-            <h2 className="text-lg font-semibold mb-4">
-              Recent Transactions
-            </h2>
-
-            {recentTransactions.length === 0 ? (
-              <div className="text-slate-500 dark:text-slate-400">
-                No transactions yet.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentTransactions.map((tx) => (
-                  <div
-                    key={tx._id}
-                    className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2"
-                  >
-                    <div>
-                      <p className="font-medium">{tx.category}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {new Date(tx.date).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div
-                      className={`font-semibold ${tx.type === "income"
-                          ? "text-income"
-                          : "text-expense"
-                        }`}
-                    >
-                      {tx.type === "income" ? "+" : "-"}₹{tx.amount}
-                    </div>
+          {recentTransactions.length === 0 ? (
+            <p className="text-slate-500 dark:text-slate-400">
+              No transactions yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {recentTransactions.map((tx) => (
+                <div
+                  key={tx._id}
+                  className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2"
+                >
+                  <div>
+                    <p className="font-medium">{tx.category}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {new Date(tx.date).toLocaleDateString()}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
 
+                  <p
+                    className={`font-semibold ${tx.type === "income"
+                      ? "text-income"
+                      : "text-expense"
+                      }`}
+                  >
+                    {tx.type === "income" ? "+" : "-"}₹{tx.amount}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>
+
     </>
   );
 };
