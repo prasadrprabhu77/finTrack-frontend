@@ -3,6 +3,9 @@ import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { getToken } from "../utils/auth";
 import CategoryExpenseChart from "../components/CategoryExpenseChart";
+import { Plus } from "lucide-react";
+import AddBudgetModal from "../components/AddBudgetModel";
+
 
 const Dashboard = () => {
   const [summary, setSummary] = useState({
@@ -11,47 +14,74 @@ const Dashboard = () => {
     balance: 0,
   });
 
-  const [categoryData,setCategoryData] = useState([])
-
+  const [categoryData, setCategoryData] = useState([])
   const [loading, setLoading] = useState(true);
+  const [budget, setBudget] = useState(null);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
-  useEffect(() => {
-  const fetchSummary = async () => {
+  const fetchBudget = async () => {
     try {
-
-      const res = await api.get("/transactions/summary", {
+      const res = await api.get("/budget", {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
       });
 
-      setSummary(res.data); // we will adjust after seeing logs
+      setBudget(res.data.budget);
+      // console.log(res.data.budget)
     } catch (error) {
-      console.error("SUMMARY API ERROR:", error.response || error);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch budget");
     }
   };
 
-  const fetchCategoryData = async () => {
-  try {
-    const res = await api.get("/transactions/category", {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
 
-    setCategoryData(res.data);
-  } catch (error) {
-    console.error("Failed to fetch category expense data");
-  }
-};
+        const res = await api.get("/transactions/summary", {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        });
+
+        setSummary(res.data); // we will adjust after seeing logs
+      } catch (error) {
+        console.error("SUMMARY API ERROR:", error.response || error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchCategoryData = async () => {
+      try {
+        const res = await api.get("/transactions/category", {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        });
+
+        setCategoryData(res.data);
+      } catch (error) {
+        console.error("Failed to fetch category expense data");
+      }
+    };
 
 
-  fetchSummary();
-  fetchCategoryData();
-}, []);
 
+
+    fetchSummary();
+    fetchCategoryData();
+    fetchBudget();
+  }, []);
+
+  
+
+
+  const spent = summary.totalExpense;
+  const totalBudget = budget?.amount || 0;
+  const percentage = totalBudget
+    ? Math.min((spent / totalBudget) * 100, 100)
+    : 0;
 
 
   return (
@@ -59,13 +89,13 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="pt-20 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
-        
+
         {/* Page Title */}
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          
+
           {/* Income */}
           <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -96,29 +126,65 @@ const Dashboard = () => {
             </p>
           </div>
           {/* Category Expense Chart */}
-<div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
-  <h2 className="text-lg font-semibold mb-4">
-    Category-wise Expenses
-  </h2>
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
+            <h2 className="text-lg font-semibold mb-4">
+              Category-wise Expenses
+            </h2>
 
-  <CategoryExpenseChart data={categoryData} />
-</div>
-
-        </div>
-
-        {/* Budget Placeholder */}
-        <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
-          <h2 className="text-lg font-semibold mb-2">
-            Monthly Budget
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400">
-            No budget set for this month.
-          </p>
-
-          <div className="mt-4 h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
-            <div className="h-3 w-1/3 bg-primary rounded"></div>
+            <CategoryExpenseChart data={categoryData} />
           </div>
+
         </div>
+
+        {/* Budget Progress */}
+        <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mb-8">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-semibold">Monthly Budget</h2>
+
+            <button
+              onClick={() => setShowBudgetModal(true)}
+              className="text-primary text-sm flex items-center gap-1"
+            >
+              <Plus size={14} />
+              {budget ? "Edit" : "Set"}
+            </button>
+          </div>
+
+          {!budget ? (
+            <div className="text-slate-500 dark:text-slate-400">
+              No budget set for this month.
+            </div>
+          ) : (
+            <div>
+              <div className="text-sm mb-2">
+                ₹{summary.totalExpense} spent out of ₹{budget.amount}
+              </div>
+
+              <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
+                <div
+                  className={`h-3 rounded ${percentage >= 100
+                      ? "bg-expense"
+                      : percentage > 80
+                        ? "bg-warning"
+                        : "bg-primary"
+                    }`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showBudgetModal && (
+          <AddBudgetModal
+            onClose={() => setShowBudgetModal(false)}
+            onSuccess={fetchBudget}
+            currentBudget={budget}
+          />
+        )}
+
+
+
 
         {/* Recent Transactions Placeholder */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
