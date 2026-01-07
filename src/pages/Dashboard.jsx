@@ -5,6 +5,7 @@ import { getToken } from "../utils/auth";
 import CategoryExpenseChart from "../components/CategoryExpenseChart";
 import { Plus } from "lucide-react";
 import AddBudgetModal from "../components/AddBudgetModel";
+import { Link } from "react-router-dom";
 
 
 const Dashboard = () => {
@@ -243,6 +244,12 @@ const Dashboard = () => {
                   </p>
                 </div>
               ))}
+              <Link
+                to="/transactions"
+                className="text-sm text-primary hover:underline"
+              >
+                View all
+              </Link>
             </div>
           )}
         </div>
