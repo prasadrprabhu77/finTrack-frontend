@@ -18,6 +18,8 @@ const Budget = () => {
     income: 0,
     expense: 0,
   });
+  const [yearlyOverview, setYearlyOverview] = useState([]);
+
 
   // 1️⃣ Fetch all budgets once
   const fetchAllBudgets = async () => {
@@ -95,6 +97,59 @@ const Budget = () => {
   };
 
 
+  const buildYearlyOverview = async () => {
+    try {
+      const res = await api.get("/transactions", {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+
+      const txs = res.data.filter((tx) => {
+        const d = new Date(tx.date);
+        return d.getFullYear() === selectedYear;
+      });
+
+      const result = [];
+
+      for (let m = 1; m <= 12; m++) {
+        const budget = allBudgets.find(
+          (b) => b.month === m && b.year === selectedYear
+        );
+
+        const spent = txs
+          .filter((tx) => {
+            const d = new Date(tx.date);
+            return (
+              d.getMonth() + 1 === m &&
+              tx.type === "expense"
+            );
+          })
+          .reduce((sum, tx) => sum + tx.amount, 0);
+
+        let status = "—";
+        if (budget) {
+          const percent = (spent / budget.amount) * 100;
+          if (percent < 80) status = "Under";
+          else if (percent <= 100) status = "Near";
+          else status = "Over";
+        }
+
+        result.push({
+          month: m,
+          budget: budget?.amount || 0,
+          spent,
+          status,
+        });
+      }
+
+      setYearlyOverview(result);
+    } catch (error) {
+      console.error("Failed to build yearly overview");
+    }
+  };
+
+
 
   // 2️⃣ Filter budget based on selected month & year
   useEffect(() => {
@@ -114,6 +169,9 @@ const Budget = () => {
     fetchAllBudgets();
   }, []);
 
+  useEffect(() => {
+    buildYearlyOverview();
+  }, [selectedYear, allBudgets]);
 
 
   return (
@@ -282,8 +340,8 @@ const Budget = () => {
                         <td className="py-2 capitalize">{tx.type}</td>
                         <td
                           className={`py-2 text-right font-medium ${tx.type === "income"
-                              ? "text-income"
-                              : "text-expense"
+                            ? "text-income"
+                            : "text-expense"
                             }`}
                         >
                           {tx.type === "income" ? "+" : "-"}₹{tx.amount}
@@ -324,6 +382,56 @@ const Budget = () => {
             </>
           )}
         </div>
+
+        {/* Yearly Budget Overview */}
+        <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow mt-8">
+          <h2 className="text-lg font-semibold mb-4">
+            Yearly Budget Overview — {selectedYear}
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-left">
+                  <th className="py-2">Month</th>
+                  <th className="py-2">Budget</th>
+                  <th className="py-2">Spent</th>
+                  <th className="py-2">Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {yearlyOverview.map((row) => (
+                  <tr
+                    key={row.month}
+                    className="border-b border-slate-100 dark:border-slate-800"
+                  >
+                    <td className="py-2">
+                      {new Date(0, row.month - 1).toLocaleString("default", {
+                        month: "long",
+                      })}
+                    </td>
+                    <td className="py-2">₹{row.budget}</td>
+                    <td className="py-2">₹{row.spent}</td>
+                    <td
+                      className={`py-2 font-medium ${row.status === "Under"
+                          ? "text-income"
+                          : row.status === "Near"
+                            ? "text-warning"
+                            : row.status === "Over"
+                              ? "text-expense"
+                              : "text-slate-400"
+                        }`}
+                    >
+                      {row.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
 
       </div>
     </>
