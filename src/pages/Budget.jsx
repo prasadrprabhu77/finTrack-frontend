@@ -12,6 +12,7 @@ const Budget = () => {
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedBudget, setSelectedBudget] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [monthlyExpense, setMonthlyExpense] = useState(0);
 
   // 1️⃣ Fetch all budgets once
   const fetchAllBudgets = async () => {
@@ -28,6 +29,33 @@ const Budget = () => {
     }
   };
 
+  //fetch monthly expense
+  const fetchMonthlyExpense = async () => {
+    try {
+      const res = await api.get("/transactions", {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+
+      const total = res.data
+        .filter((tx) => {
+          const d = new Date(tx.date);
+          return (
+            tx.type === "expense" &&
+            d.getMonth() + 1 === selectedMonth &&
+            d.getFullYear() === selectedYear
+          );
+        })
+        .reduce((sum, tx) => sum + tx.amount, 0);
+
+      setMonthlyExpense(total);
+    } catch (error) {
+      console.error("Failed to fetch monthly expense");
+    }
+  };
+
+
   // 2️⃣ Filter budget based on selected month & year
   useEffect(() => {
     const budget = allBudgets.find(
@@ -37,6 +65,7 @@ const Budget = () => {
     );
 
     setSelectedBudget(budget || null);
+    fetchMonthlyExpense();
   }, [allBudgets, selectedMonth, selectedYear]);
 
   useEffect(() => {
@@ -52,7 +81,7 @@ const Budget = () => {
 
         {/* Month & Year Selector */}
         <div className="bg-white dark:bg-cardDark rounded-xl p-4 shadow mb-6 flex gap-4 flex-wrap">
-          
+
           {/* Month */}
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -89,38 +118,74 @@ const Budget = () => {
           </div>
         </div>
 
-        {/* Budget Summary */}
-        <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow max-w-xl">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">
-              Budget for{" "}
-              {new Date(
-                selectedYear,
-                selectedMonth - 1
-              ).toLocaleString("default", {
-                month: "long",
-                year: "numeric",
-              })}
-            </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl">
 
-            <button
-              onClick={() => setShowModal(true)}
-              className="text-primary text-sm"
-            >
-              {selectedBudget ? "Edit" : "Set"} Budget
-            </button>
+          {/* Budget Summary */}
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-semibold">
+                Budget for{" "}
+                {new Date(selectedYear, selectedMonth - 1).toLocaleString("default", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </h2>
+
+              <button
+                onClick={() => setShowModal(true)}
+                className="text-primary text-sm"
+              >
+                {selectedBudget ? "Edit" : "Set"} Budget
+              </button>
+            </div>
+
+            {!selectedBudget ? (
+              <p className="text-slate-500 dark:text-slate-400">
+                No budget set for this month.
+              </p>
+            ) : (
+              <p className="text-lg font-semibold">
+                ₹{selectedBudget.amount}
+              </p>
+            )}
           </div>
 
-          {!selectedBudget ? (
-            <p className="text-slate-500 dark:text-slate-400">
-              No budget set for this month.
+          {/* Monthly Expense Summary */}
+          <div className="bg-white dark:bg-cardDark rounded-xl p-6 shadow">
+            <h2 className="text-lg font-semibold mb-3">
+              Monthly Expense
+            </h2>
+
+            <p className="text-2xl font-bold text-expense mb-1">
+              ₹{monthlyExpense}
             </p>
-          ) : (
-            <p className="text-lg font-semibold">
-              Budget Amount: ₹{selectedBudget.amount}
-            </p>
-          )}
+
+            {selectedBudget && (
+              <>
+                <p className="text-sm text-slate-500 mb-2">
+                  Remaining ₹{Math.max(selectedBudget.amount - monthlyExpense, 0)}
+                </p>
+
+                <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">
+                  <div
+                    className={`h-3 rounded ${monthlyExpense > selectedBudget.amount
+                        ? "bg-expense"
+                        : "bg-primary"
+                      }`}
+                    style={{
+                      width: `${Math.min(
+                        (monthlyExpense / selectedBudget.amount) * 100,
+                        100
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
         </div>
+
 
         {/* Budget Modal */}
         {showModal && (
