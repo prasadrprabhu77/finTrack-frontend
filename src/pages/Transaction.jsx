@@ -70,7 +70,7 @@ const Transactions = () => {
     <>
       <Navbar />
 
-      <div className="pt-20 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
+      <div className="pt-24 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

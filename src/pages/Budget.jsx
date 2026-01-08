@@ -255,7 +255,7 @@ const Budget = () => {
     <>
       <Navbar />
 
-      <div className="pt-20 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
+      <div className="pt-24 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
         <h1 className="text-2xl font-bold mb-6">Budget</h1>
 
         {/* Month & Year Selector */}

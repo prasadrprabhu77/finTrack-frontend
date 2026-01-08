@@ -135,7 +135,7 @@ const Dashboard = () => {
     <>
       <Navbar />
 
-      <div className="pt-20 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
+      <div className="pt-24 px-6 bg-bgLight dark:bg-bgDark min-h-screen">
 
         {/* Page Title */}
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
