@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [budget, setBudget] = useState(null);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [monthlyExpense, setMonthlyExpense] = useState(0);
 
 
   const fetchBudget = async () => {
@@ -86,18 +87,44 @@ const Dashboard = () => {
     };
 
 
-
-
     fetchSummary();
     fetchCategoryData();
     fetchBudget();
     fetchRecentTransactions();
+    fetchMonthlyExpense();
   }, []);
 
+   //fetch monthly expense
+    const fetchMonthlyExpense = async () => {
+      try {
+        const res = await api.get("/transactions", {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        });
+
+        const now = new Date();
+        const total = res.data
+          .filter((tx) => {
+            const d = new Date(tx.date);
+            return (
+              tx.type === "expense" &&
+              d.getMonth()  === now.getMonth() &&
+              d.getFullYear() === now.getFullYear()
+            );
+          })
+          .reduce((sum, tx) => sum + tx.amount, 0);
+          console.log(total)
+        setMonthlyExpense(total);
+      } catch (error) {
+        console.error("Failed to fetch monthly expense");
+      }
+    };
 
 
 
-  const spent = summary.totalExpense;
+
+  const spent = monthlyExpense;
   const totalBudget = budget?.amount || 0;
   const percentage = totalBudget
     ? Math.min((spent / totalBudget) * 100, 100)
@@ -169,10 +196,10 @@ const Dashboard = () => {
             ) : (
               <>
                 <p className="text-sm mb-1">
-                  ₹{summary.totalExpense} spent of ₹{budget.amount}
+                  ₹{monthlyExpense} spent of ₹{budget.amount}
                 </p>
                 <p className="text-xs text-slate-500 mb-3">
-                  Remaining ₹{Math.max(budget.amount - summary.totalExpense, 0)}
+                  Remaining ₹{Math.max(budget.amount - monthlyExpense, 0)}
                 </p>
 
                 <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded">

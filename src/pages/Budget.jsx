@@ -3,6 +3,10 @@ import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { getToken } from "../utils/auth";
 import AddBudgetModal from "../components/AddBudgetModel";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+
 
 const Budget = () => {
   const now = new Date();
@@ -147,6 +151,79 @@ const Budget = () => {
     } catch (error) {
       console.error("Failed to build yearly overview");
     }
+  };
+
+
+  const exportPDF = () => {
+  if (monthlyTransactions.length === 0) return;
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text(
+    `Monthly Statement - ${new Date(
+      selectedYear,
+      selectedMonth - 1
+    ).toLocaleString("default", { month: "long", year: "numeric" })}`,
+    14,
+    15
+  );
+
+  const tableData = monthlyTransactions.map((tx) => [
+    new Date(tx.date).toLocaleDateString(),
+    tx.category,
+    tx.type,
+    `${tx.type === "income" ? "+" : "-"}₹${tx.amount}`,
+  ]);
+
+  // ✅ THIS IS THE KEY LINE
+  autoTable(doc, {
+    head: [["Date", "Description", "Type", "Amount"]],
+    body: tableData,
+    startY: 25,
+  });
+
+  const finalY = doc.lastAutoTable.finalY || 30;
+
+  doc.text(`Total Income: ₹${monthlyTotals.income}`, 14, finalY + 10);
+  doc.text(`Total Expense: ₹${monthlyTotals.expense}`, 14, finalY + 18);
+  doc.text(
+    `Net Balance: ₹${monthlyTotals.income - monthlyTotals.expense}`,
+    14,
+    finalY + 26
+  );
+
+  doc.save(`statement-${selectedMonth}-${selectedYear}.pdf`);
+};
+
+
+
+  const exportCSV = () => {
+    if (monthlyTransactions.length === 0) return;
+
+    const headers = ["Date", "Description", "Type", "Amount"];
+
+    const rows = monthlyTransactions.map((tx) => [
+      new Date(tx.date).toLocaleDateString(),
+      tx.category,
+      tx.type,
+      tx.type === "income" ? tx.amount : -tx.amount,
+    ]);
+
+    const csvContent =
+      [headers, ...rows]
+        .map((row) => row.join(","))
+        .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `statement-${selectedMonth}-${selectedYear}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url);
   };
 
 
@@ -310,6 +387,31 @@ const Budget = () => {
             })}
           </h2>
 
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">
+              Monthly Statement —{" "}
+              {new Date(selectedYear, selectedMonth - 1).toLocaleString("default", {
+                month: "long",
+                year: "numeric",
+              })}
+            </h2>
+
+            <button
+              onClick={exportCSV}
+              className="text-sm text-primary border px-3 py-1 rounded hover:bg-primary hover:text-white transition"
+            >
+              Export CSV
+            </button>
+            <button
+              onClick={exportPDF}
+              className="text-sm border px-3 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Export PDF
+            </button>
+
+          </div>
+
+
           {monthlyTransactions.length === 0 ? (
             <p className="text-slate-500 dark:text-slate-400">
               No transactions found for this month.
@@ -415,12 +517,12 @@ const Budget = () => {
                     <td className="py-2">₹{row.spent}</td>
                     <td
                       className={`py-2 font-medium ${row.status === "Under"
-                          ? "text-income"
-                          : row.status === "Near"
-                            ? "text-warning"
-                            : row.status === "Over"
-                              ? "text-expense"
-                              : "text-slate-400"
+                        ? "text-income"
+                        : row.status === "Near"
+                          ? "text-warning"
+                          : row.status === "Over"
+                            ? "text-expense"
+                            : "text-slate-400"
                         }`}
                     >
                       {row.status}
